@@ -18,3 +18,7 @@ d  = [0, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 1
 for i in range(len(c)):
     if(c[i] != d[i]):
         print("Valores distintos pos " , i , " valores " , c[i] , d[i])
+
+
+
+

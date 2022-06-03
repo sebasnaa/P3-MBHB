@@ -104,12 +104,24 @@ def calcular_punto_siguiente(camino_generado,matriz_feromonas,matriz_heuristica,
             # Se calculan los valores de probabilidad de cada punto no visitado
             feromona_arco = math.pow(matriz_feromonas[punto_ultimo][indice],alpha)
             heuristica_arco = math.pow(matriz_heuristica[punto_ultimo][indice],beta)
+            # if indice < punto_ultimo:
+            #     feromona_arco = math.pow(matriz_feromonas[indice][punto_ultimo],alpha)
+            #     heuristica_arco = math.pow(matriz_heuristica[indice][punto_ultimo],beta)
+            # else:
+            #     feromona_arco = math.pow(matriz_feromonas[punto_ultimo][indice],alpha)
+            #     heuristica_arco = math.pow(matriz_heuristica[punto_ultimo][indice],beta)
             no_visitados = set(todos_los_puntos) - set(camino_generado)
             no_visitados = list(no_visitados)
             
             for k in (no_visitados):
-                feromona_sum = math.pow(matriz_feromonas[punto_ultimo][k],alpha)
-                heuristica_sum = math.pow(matriz_heuristica[punto_ultimo][k],beta)
+                feromona_sum = math.pow(matriz_feromonas[k][punto_ultimo],alpha)
+                heuristica_sum = math.pow(matriz_heuristica[k][punto_ultimo],beta)
+                # if k < punto_ultimo:
+                #     feromona_sum = math.pow(matriz_feromonas[k][punto_ultimo],alpha)
+                #     heuristica_sum = math.pow(matriz_heuristica[k][punto_ultimo],beta)
+                # else:
+                #     feromona_sum = math.pow(matriz_feromonas[punto_ultimo][k],alpha)
+                #     heuristica_sum = math.pow(matriz_heuristica[punto_ultimo][k],beta)
                 sumatorio += feromona_sum * heuristica_sum
 
             probabilidad = (feromona_arco * heuristica_arco) / sumatorio
@@ -153,6 +165,51 @@ def creacion_de_camino(matriz_feromonas,matriz_heuristica,punto_partida):
     return coste_camino_generado,camino_generado
 
 
+# def actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas,valor_evaporacion=0.1):
+#     # modificamos los valores de la matriz de feromonas, modificado ambas posiciones
+    
+    
+#     variaciones =  np.ones((len(matriz_feromonas),len(matriz_feromonas)))*(1-valor_evaporacion)
+#     matriz_feromonas = matriz_feromonas*variaciones
+    
+#     matriz_aportaciones = np.zeros((len(matriz_feromonas),len(matriz_feromonas)))
+    
+    
+    
+#     for i in range(len(caminos_hormigas)):
+#         camino = caminos_hormigas[i]
+#         aporte = costes_caminos_hormigas[i]
+#         # print("long camino " , len(camino))
+#         for k in range(len(camino)):
+#             k = k-1 
+#             pos = camino[k]
+#             pos_sig = camino[k+1]
+#             # if pos < pos_sig:
+#             # elif pos > pos_sig:
+            
+#             matriz_aportaciones[pos][pos_sig] += aporte
+#             matriz_aportaciones[pos_sig][pos] += aporte
+                
+#         # if camino[0] < camino[-1]:
+#         # elif camino[0] > camino[-1]:
+#         matriz_aportaciones[camino[0]][camino[-1]] += aporte
+#         matriz_aportaciones[camino[-1]][camino[0]] += aporte
+        
+        
+#     # matriz_feromonas = np.add(matriz_aportaciones,matriz_feromonas)
+#     # return matriz_feromonas
+    
+#     for puntoA in range(0,len(matriz_feromonas)):
+#         for puntoB in range(0,len(matriz_feromonas)):
+#             if puntoA != puntoB:
+#                 valor = matriz_aportaciones[puntoA][puntoB]
+#                 if puntoA < puntoB:
+#                     matriz_feromonas[puntoA][puntoB] += valor
+#                 else:
+#                     matriz_feromonas[puntoB][puntoA] += valor
+              
+#     return matriz_feromonas
+        
 def actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas,valor_evaporacion=0.1):
     # modificamos los valores de la matriz de feromonas, modificado ambas posiciones
     
@@ -182,22 +239,11 @@ def actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos
                 
                 matriz_feromonas[puntoB][puntoA] += matriz_aportaciones[puntoB][puntoA]
                 matriz_feromonas[puntoB][puntoA] += matriz_aportaciones[puntoA][puntoB]
-        
-    
-    # for puntoA in range(0,len(matriz_feromonas)):
-    #     for puntoB in range(0,len(matriz_feromonas)):
-    #         if puntoA != puntoB:
-    #             feromonas[puntoA][puntoB] += matriz_aportaciones[puntoA][puntoB]
-    #             feromonas[puntoA][puntoB] += matriz_aportaciones[puntoB][puntoA]
                 
-                # feromonas[puntoB][puntoA] += matriz_aportaciones[puntoB][puntoA]
-                # feromonas[puntoB][puntoA] += matriz_aportaciones[puntoA][puntoB]
-    # feromonas.copy()
-    
-    # return feromonas
-        
+                
+    return feromonas
 
-def hormigas(problema = "ch130.tsp",n_hormigas=5,limite_iteracciones = 40,valor_inicial_feronomas=1,punto_partida = 0):
+def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 40,valor_inicial_feronomas=1,punto_partida = 0):
     
     datos = lectura_archivo(problema)
     matriz_heuristica = calculo_matriz_heuristica(datos)
@@ -245,7 +291,7 @@ def hormigas(problema = "ch130.tsp",n_hormigas=5,limite_iteracciones = 40,valor_
         # Aplicamos la evaporación y el aporte 
         # matriz_feromonas = actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas)
         
-        actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas)
+        matriz_feromonas = actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas)
         
         eje_y.append(coste_mejor_camino_global)
         print("coste mejor ", coste_mejor_camino_global)
@@ -261,17 +307,11 @@ def hormigas(problema = "ch130.tsp",n_hormigas=5,limite_iteracciones = 40,valor_
 
 # datos = lectura_archivo("a280.tsp")
 
-# valor = 1/(280*3157)
-
-valor = 1/(130*7579)
-
-# valor = 1/(52*5000)
+valor = 1/(280*3157)
+# valor = 1/(130*7579)
 
 
-random.seed(343761)
-np.random.seed(343761)
-
-hormigas(problema="ch130.tsp",valor_inicial_feronomas = valor)
+hormigas(problema="a280.tsp",valor_inicial_feronomas = valor)
 
 
 
