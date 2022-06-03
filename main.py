@@ -149,13 +149,14 @@ def creacion_de_camino(matriz_feromonas,matriz_heuristica,punto_partida):
     coste_camino_generado += (1/valor)
     camino_generado.append(punto_partida)
     
+    
     return coste_camino_generado,camino_generado
 
 
 def actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas,valor_evaporacion=0.1):
     # modificamos los valores de la matriz de feromonas, modificado ambas posiciones
     
-    feromonas = copy(matriz_feromonas)
+    feromonas = deepcopy(matriz_feromonas)
     
     variaciones =  np.ones((len(matriz_feromonas),len(matriz_feromonas)))*(1-valor_evaporacion)
     feromonas = feromonas*variaciones
@@ -176,17 +177,27 @@ def actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos
     for puntoA in range(0,len(matriz_feromonas)):
         for puntoB in range(0,len(matriz_feromonas)):
             if puntoA != puntoB:
-                feromonas[puntoA][puntoB] += matriz_aportaciones[puntoA][puntoB]
-                feromonas[puntoA][puntoB] += matriz_aportaciones[puntoB][puntoA]
+                matriz_feromonas[puntoA][puntoB] += matriz_aportaciones[puntoA][puntoB]
+                matriz_feromonas[puntoA][puntoB] += matriz_aportaciones[puntoB][puntoA]
                 
-                feromonas[puntoB][puntoA] += matriz_aportaciones[puntoB][puntoA]
-                feromonas[puntoB][puntoA] += matriz_aportaciones[puntoA][puntoB]
+                matriz_feromonas[puntoB][puntoA] += matriz_aportaciones[puntoB][puntoA]
+                matriz_feromonas[puntoB][puntoA] += matriz_aportaciones[puntoA][puntoB]
+        
+    
+    # for puntoA in range(0,len(matriz_feromonas)):
+    #     for puntoB in range(0,len(matriz_feromonas)):
+    #         if puntoA != puntoB:
+    #             feromonas[puntoA][puntoB] += matriz_aportaciones[puntoA][puntoB]
+    #             feromonas[puntoA][puntoB] += matriz_aportaciones[puntoB][puntoA]
+                
+                # feromonas[puntoB][puntoA] += matriz_aportaciones[puntoB][puntoA]
+                # feromonas[puntoB][puntoA] += matriz_aportaciones[puntoA][puntoB]
     # feromonas.copy()
     
-    return feromonas
+    # return feromonas
         
 
-def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 40,valor_inicial_feronomas=1,punto_partida = 0):
+def hormigas(problema = "ch130.tsp",n_hormigas=5,limite_iteracciones = 40,valor_inicial_feronomas=1,punto_partida = 0):
     
     datos = lectura_archivo(problema)
     matriz_heuristica = calculo_matriz_heuristica(datos)
@@ -208,12 +219,14 @@ def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 40,valor
         
     for iteraccion in range(0,limite_iteracciones):
         eje_x.append(iteraccion)
+        caminos_hormigas = []
+        costes_caminos_hormigas = []    
         for hormiga in range(n_hormigas): 
             
             print("ite " , iteraccion , " hormiga " , hormiga)
             # Cada hormiga crea su recorrido
             coste_camino,camino_actual = creacion_de_camino(matriz_feromonas,matriz_heuristica,punto_partida)
-            print(camino_actual[0:10] , " coste " , coste_camino)
+            print("coste ," , coste_camino)
             caminos_hormigas.append(camino_actual)
             costes_caminos_hormigas.append(coste_camino)
             
@@ -230,7 +243,9 @@ def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 40,valor
                 print(mejor_camino_global , coste_mejor_camino_global)
                 return
         # Aplicamos la evaporación y el aporte 
-        matriz_feromonas = deepcopy(actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas))
+        # matriz_feromonas = actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas)
+        
+        actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas)
         
         eje_y.append(coste_mejor_camino_global)
         print("coste mejor ", coste_mejor_camino_global)
@@ -248,13 +263,13 @@ def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 40,valor
 
 # valor = 1/(280*3157)
 
-# valor = 1/(130*7579)
+valor = 1/(130*7579)
 
-valor = 1/(130*6110)
+# valor = 1/(52*5000)
 
 
-random.seed(12385214)
-np.random.seed(12385214)
+random.seed(343761)
+np.random.seed(343761)
 
 hormigas(problema="ch130.tsp",valor_inicial_feronomas = valor)
 
