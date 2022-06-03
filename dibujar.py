@@ -77,7 +77,11 @@ indices_optimo = [1,2,242,243,244,241,240,239,238,237,236,235,234,233,232,231,24
 indices_optimo = indices_optimo - np.ones(len(indices_optimo))
 print(indices_optimo)
 
+<<<<<<< HEAD
 indices_obtenidos = np.array(indices)
+=======
+indices = np.array(indices)
+>>>>>>> modificacion-buena
 
 eje_x = []
 eje_y = []
