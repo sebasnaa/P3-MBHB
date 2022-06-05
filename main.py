@@ -1,3 +1,4 @@
+from cmath import cos
 from copy import copy, deepcopy
 import math
 import random
@@ -136,16 +137,6 @@ def calcular_punto_siguiente(camino_generado,matriz_feromonas,matriz_heuristica,
         feromona_sum = math.pow(matriz_feromonas[punto_ultimo][k],alpha)
         heuristica_sum = math.pow(matriz_heuristica[punto_ultimo][k],beta)
         sumatorio += feromona_sum * heuristica_sum
-    
-    # for indice in range(len(matriz_heuristica)):
-    #     if indice not in camino_generado:
-    #         # Se calculan los valores de probabilidad de cada punto no visitado
-    #         feromona_arco = math.pow(matriz_feromonas[punto_ultimo][indice],alpha)
-    #         heuristica_arco = math.pow(matriz_heuristica[punto_ultimo][indice],beta)
-           
-    #         probabilidad = (feromona_arco * heuristica_arco) / sumatorio
-    #         probabilidades.append(probabilidad)
-    #         indices_validos.append(indice)
         
 
     for indice in no_visitados:
@@ -198,41 +189,105 @@ def creacion_de_camino(matriz_feromonas,matriz_heuristica,punto_partida):
     return coste_camino_generado,camino_generado
 
 
-def actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas,valor_evaporacion=0.1):
+def actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas,mejor_camino_global,coste_mejor_camino_global=1,elite=0,valor_evaporacion=0.1):
     # modificamos los valores de la matriz de feromonas, modificado ambas posiciones  
-    
-    
+
     variaciones =  np.ones((len(matriz_feromonas),len(matriz_feromonas)))*(1-valor_evaporacion)
     matriz_feromonas = matriz_feromonas*variaciones
     
     matriz_aportaciones = np.zeros((len(matriz_feromonas),len(matriz_feromonas)))
+
     
-    for i in range(len(caminos_hormigas)-1):
+    for i in range(len(caminos_hormigas)):
         camino = caminos_hormigas[i]
         aporte = costes_caminos_hormigas[i]
         for k in range(len(camino)-1):
             pos = camino[k]
             pos_sig = camino[k+1]
-            matriz_aportaciones[pos][pos_sig] += (1/aporte)
-            matriz_aportaciones[pos_sig][pos] += (1/aporte)
+            matriz_aportaciones[pos][pos_sig] += (1/aporte)  
+            matriz_aportaciones[pos_sig][pos] += (1/aporte) 
 
-        matriz_aportaciones[camino[-1]][camino[0]] += (1/aporte)
+        matriz_aportaciones[camino[-1]][camino[0]] += (1/aporte) 
         matriz_aportaciones[camino[0]][camino[-1]] += (1/aporte)
+        
+    matriz_feromonas = np.add(matriz_feromonas,matriz_aportaciones)
     
+    if elite != 0:
+        for k in range(len(mejor_camino_global)-1):
+            pos = mejor_camino_global[k]
+            pos_sig = mejor_camino_global[k+1]
+            matriz_feromonas[pos][pos_sig] += (elite/coste_mejor_camino_global)  
+            matriz_feromonas[pos_sig][pos] += (elite/coste_mejor_camino_global) 
+        
+        matriz_feromonas[mejor_camino_global[-1]][mejor_camino_global[0]] += (elite/coste_mejor_camino_global)  
+        matriz_feromonas[mejor_camino_global[0]][mejor_camino_global[-1]] += (elite/coste_mejor_camino_global)
     
-    for puntoA in range(0,len(matriz_feromonas)):
-        for puntoB in range(0,len(matriz_feromonas)):
-            if puntoA != puntoB:
-                matriz_feromonas[puntoA][puntoB] += matriz_aportaciones[puntoA][puntoB]
-                # matriz_feromonas[puntoA][puntoB] += matriz_aportaciones[puntoB][puntoA]
+    # if elite == 0:
+    #     for puntoA in range(0,len(matriz_feromonas)):
+    #         for puntoB in range(0,len(matriz_feromonas)):
+    #             if puntoA != puntoB:
+    #                 matriz_feromonas[puntoA][puntoB] += matriz_aportaciones[puntoA][puntoB]  
+    #                 matriz_feromonas[puntoB][puntoA] += matriz_aportaciones[puntoB][puntoA]
+    # else:
+        
+    #     aporte_elitista = elite/coste_mejor_camino_global
+    #     for puntoA in range(0,len(matriz_feromonas)):
+    #         for puntoB in range(0,len(matriz_feromonas)):
+    #             if puntoA != puntoB:
+    #                 if existe_arco(mejor_camino_global,puntoA,puntoB):
+    #                     matriz_feromonas[puntoA][puntoB] += matriz_aportaciones[puntoA][puntoB] + aporte_elitista
+    #                     matriz_feromonas[puntoB][puntoA] += matriz_aportaciones[puntoB][puntoA] + aporte_elitista
+    #                 else:
+    #                     matriz_feromonas[puntoA][puntoB] += matriz_aportaciones[puntoA][puntoB]  
+    #                     matriz_feromonas[puntoB][puntoA] += matriz_aportaciones[puntoB][puntoA]
                 
-                matriz_feromonas[puntoB][puntoA] += matriz_aportaciones[puntoB][puntoA]
-                # matriz_feromonas[puntoB][puntoA] += matriz_aportaciones[puntoA][puntoB]
+
     
     return matriz_feromonas
         
+        
+def existe_arco(camino,a,b):
+    
+    indice_a = camino.index(a)
+    indice_b_arriba = (indice_a + 1) % len(camino)
+    indice_b_abajo = (indice_a - 1 ) % len(camino)
+    if b == camino[indice_b_arriba] or b == camino[indice_b_abajo] :
+        # print("hay arco")
+        return True
 
-def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 1000000000,valor_inicial_feronomas=1,punto_partida = 0):
+
+def actualizar_matriz_feromonas_dos(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas,valor_evaporacion=0.1):
+    # modificamos los valores de la matriz de feromonas, modificado ambas posiciones  
+
+    for puntoA in range(len(caminos_hormigas[0])-1):
+        for puntoB in range(len(caminos_hormigas[0])-1):
+            evaporacion = (1-valor_evaporacion) * matriz_feromonas[puntoA][puntoB]
+
+            aportacion = 0
+            for c in range(len(caminos_hormigas)):
+                camino = caminos_hormigas[c]
+                coste = costes_caminos_hormigas[c]
+                if existe_arco(camino,puntoA,puntoB):
+                    aportacion += 1 / coste
+            matriz_feromonas[puntoA][puntoB] = evaporacion + aportacion
+    
+    return matriz_feromonas
+                    
+
+def dibujar(fichero,camino):
+    datos = lectura_archivo(fichero)
+    # indices_obtenidos = np.array(mejor_camino_global)
+
+    eje_x = []
+    eje_y = []
+    for k in camino:
+        eje_x.append(datos[k][0])
+        eje_y.append(datos[k][1])
+
+    plt.plot(np.array(eje_x),np.array(eje_y))
+    plt.show()
+
+def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 100_000,minutos_limite=1,valor_inicial_feronomas=1,punto_partida = 0,elite = 0,verbose = False):
     
     datos = lectura_archivo(problema)
     matriz_heuristica = calculo_matriz_heuristica(datos)
@@ -252,7 +307,7 @@ def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 10000000
     diff = 0
   
     iteraccion = 0
-    while iteraccion < limite_iteracciones and (time.time() - inicio) < 60*6:
+    while iteraccion < limite_iteracciones and (time.time() - inicio) < 60*minutos_limite:
         eje_x.append(iteraccion)
         eje_y.append(coste_mejor_camino_global)
         
@@ -276,17 +331,16 @@ def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 10000000
             
             diff =  time.time() - inicio
             print(diff , " tiempo")
-
-        print("homtti tt",time.time() - inicio_hormigas)
         
         # Aplicamos la evaporación y el aporte 
-        print("timp ",time.time() - inicio)
-        matriz_feromonas = actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas)
+        
+        matriz_feromonas = actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos_hormigas,coste_mejor_camino_global=coste_mejor_camino_global,mejor_camino_global=mejor_camino_global,elite=elite)
+        
         iteraccion += 1
         
-    # print(mejor_camino_global , coste_mejor_camino_global)
-    plt.plot(np.array(eje_x),np.array(eje_y))
-    plt.show()
+    if verbose:
+        plt.plot(np.array(eje_x),np.array(eje_y))
+        plt.show()
     return mejor_camino_global , coste_mejor_camino_global
     
 
@@ -295,48 +349,51 @@ def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 10000000
 
 
 
-random.seed(12385214)
-np.random.seed(12385214)
 
 
+semilla = 297770524
+semilla = random.randint(41689191,999999999)
+
+random.seed(semilla)
+np.random.seed(semilla)
 
 # valor = 1/(280*6958)
-# f =  "a280.tsp"  
-
 
 valor = 1/(130*7579)
-f = "ch130.tsp"
-
-mejor_camino_global,coste_mejor_camino_global = hormigas(problema=f,valor_inicial_feronomas = valor)
-
-print(mejor_camino_global,coste_mejor_camino_global)
-
-datos = lectura_archivo(f)
-distancias = calculo_matriz_distancias(datos)
+f =  "ch130.tsp"  
 
 
-
-p = mejor_camino_global
-coste = 0
-for i in range(len(p)-1):
-    a = p[i]
-    b = p[i+1]
-    coste += distancias[a][b]
-print(coste)
+# valor = 1/(130*7579)
+# f = "ch130.tsp"
 
 
+# hormiga  6610.0
+# semilla utilizada  219521112
+
+mejor_camino_global,coste_mejor_camino_global_elite = hormigas(problema=f,valor_inicial_feronomas = valor,minutos_limite=6,elite=15,verbose=False)
+# mejor_camino_global,coste_mejor_camino_global = hormigas(problema=f,valor_inicial_feronomas = valor,elite=0)
+
+print("hormiga " ,coste_mejor_camino_global_elite)
+
+print("semilla utilizada ", semilla)
+
+# dibujar(f,mejor_camino_global)
 
 
 
-indices_obtenidos = np.array(mejor_camino_global)
 
-eje_x = []
-eje_y = []
-for k in mejor_camino_global:
-    eje_x.append(datos[k][0])
-    eje_y.append(datos[k][1])
+# datos = lectura_archivo(f)
+# distancias = calculo_matriz_distancias(datos)
 
-plt.plot(np.array(eje_x),np.array(eje_y))
-plt.show()
+# p = mejor_camino_global
+# coste = 0
+# for i in range(len(p)-1):
+#     a = p[i]
+#     b = p[i+1]
+#     coste += distancias[a][b]
+# print(coste)
+
+
+
 
 
