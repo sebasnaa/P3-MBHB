@@ -1,26 +1,24 @@
 a280
 -----------------------------------
-semilla utilizada  90855911
-60.32447528839111  tiempo
-hormiga  3494.0
 
-60.838308811187744  tiempo
-hormiga  3443.0
-
-
------------------------------------
-hormiga  3416.0
+elite
 semilla utilizada  99877657
-
 hormiga  2859.0
 
-
-------------------------------------
-hormiga  3384.0
+elite
 semilla utilizada  60023307
 hormiga  2971.0
 
+elite
+hormiga  2876.0
+semilla utilizada  747624610
 
+
+hormiga  2956.0
+semilla utilizada  621525370
+
+hormiga  2847.0
+semilla utilizada  467389604
 
 ch130
 -----------------------------------
@@ -62,3 +60,17 @@ elite
 hormiga  6660.0
 semilla utilizada  834551757
 
+elite
+hormiga  6636.0
+semilla utilizada  172039164
+
+eliet 
+hormiga  6734.0
+semilla utilizada  152546667
+
+
+
+
+colonia
+hormiga  6272.0
+semilla utilizada  467389604
