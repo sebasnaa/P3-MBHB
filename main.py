@@ -1,10 +1,15 @@
+from cProfile import label
 from cmath import cos
 from copy import copy, deepcopy
+from dis import dis
 import math
 import random
+from textwrap import indent
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+
+from sympy import appellf1
 
 def get_dimension_fichero(fichero):
     with open(fichero,'r') as file:
@@ -23,7 +28,6 @@ def get_dimension_fichero(fichero):
 def lectura_archivo(fichero):
     dimension = int(get_dimension_fichero(fichero))
     valores = np.loadtxt(fichero,skiprows=6,max_rows=dimension,dtype='int')
-
     res = list()
     tmp = list()
     for i in range(len(valores)):
@@ -39,9 +43,11 @@ def calculo_matriz_heuristica(valores):
     para generar la matriz de heuristicas
     :return:
     """
-    heuristicas = np.zeros((len(valores)-1,len(valores)-1))
-    for puntoA in range(0,len(valores)-1):
-        for puntoB in range(0,len(valores)-1):
+    
+  
+    heuristicas = np.zeros((len(valores),len(valores)))
+    for puntoA in range(0,len(valores)):
+        for puntoB in range(0,len(valores)):
             # print(puntoA , puntoB)
             if puntoA != puntoB:
                 # print(valores[puntoA] , " " , valores[puntoB])
@@ -50,12 +56,16 @@ def calculo_matriz_heuristica(valores):
                 value = int(math.sqrt(x*x + y*y))
                 if value != 0:
                     heuristicas[puntoA][puntoB] = 1/value
+                    heuristicas[puntoB][puntoA] = 1/value
                 if value == 0:
                     # Como lo manejamos, debidoa  que son distintos puntos 
                     # pero con una posicion identica
-                    heuristicas[puntoA][puntoB] = 0.01
+                    heuristicas[puntoA][puntoB] = 1 #0.01
+                    heuristicas[puntoB][puntoA] = 1 
             else:
                 heuristicas[puntoA][puntoB] = math.inf
+                heuristicas[puntoB][puntoA] = math.inf
+                
 
 
     return heuristicas
@@ -66,9 +76,13 @@ def calculo_matriz_distancias(valores):
     para generar la matriz de heuristicas
     :return:
     """
-    distancias = np.zeros((len(valores)-1,len(valores)-1))
-    for puntoA in range(0,len(valores)-1):
-        for puntoB in range(0,len(valores)-1):
+    
+    # distancias = np.zeros((len(valores)-1,len(valores)-1))
+    distancias = np.zeros((len(valores),len(valores)))
+    
+    # se han mod len - 1
+    for puntoA in range(0,len(valores)):
+        for puntoB in range(0,len(valores)):
             # print(puntoA , puntoB)
             if puntoA != puntoB:
                 # print(valores[puntoA] , " " , valores[puntoB])
@@ -77,13 +91,14 @@ def calculo_matriz_distancias(valores):
                 value = int(math.sqrt(x*x + y*y))
                 if value != 0:
                     distancias[puntoA][puntoB] = value
+                    distancias[puntoB][puntoA] = value
                 if value == 0:
                     # Como lo manejamos, debidoa  que son distintos puntos 
                     # pero con una posicion identica
-                    distancias[puntoA][puntoB] = 1
+                    distancias[puntoA][puntoB] = 0
+                    distancias[puntoB][puntoA] = 0
             else:
                 distancias[puntoA][puntoB] = math.inf
-
 
     return distancias
 
@@ -101,22 +116,46 @@ def get_valor_minimo(distancias_segun_punto,visitados):
 
     return valor_minimo,indice
 
-def greedy_calculo_camino_optimo(distancias,punto_partida):
-
-    # puntos_visitados_ordenados = list()
-    # punto_inicial = 0
-
-    # punto_actual = punto_inicial
-    # # while len(puntos_visitados_ordenados) < len(distancias):
-
-    # puntos_visitados_ordenados.append(0)
-
-    # valor,indice = get_valor_minimo(distancias[0],puntos_visitados_ordenados)
-    # print(distancias[0])
-    # print(valor, indice)
+def greedy_calculo_camino_optimo(problema,punto_partida = 0):
+    """
+    Cálculo distancia con algoritmo greedy,
     
-    solucion = [0]
-    puntos_pendientes = np.arange(0,len(distancias))
+    Parametros
+    ----------
+    
+    problema : 'Fichero de datos'
+    punto_partida : 'Nodo de inicio' 
+    
+    """
+
+    datos = lectura_archivo(problema)
+    distancias = calculo_matriz_distancias(datos)
+   
+    camino = [punto_partida]
+    
+    for i in range(len(distancias)):
+        dist_minima = 99999
+        indice_min = -1    
+        for k in range(0,len(distancias)):
+            if k not in camino:
+                dis_punto = distancias[camino[-1]][k]
+                if dis_punto < dist_minima:
+                    dist_minima = dis_punto
+                    indice_min = k
+        camino.append(indice_min)
+
+    coste = 0
+    for i in range(len(camino)-1):
+        a = camino[i]
+        b = camino[i+1]
+        coste += distancias[a][b]
+        
+    coste+= distancias[camino[-1]][camino[0]]
+
+
+    return 1/(len(distancias)*coste)
+    
+    
     
     
     
@@ -191,7 +230,7 @@ def calcular_punto_siguiente_sistema_hormigas(camino_generado,matriz_feromonas,m
 
     
 
-def creacion_de_camino(matriz_feromonas,matriz_heuristica,punto_partida,valor_inicial_feronomas,sistema=False):
+def creacion_de_camino(matriz_feromonas,matriz_heuristica,punto_partida,valor_inicial_feronomas=1,sistema=False):
     
     camino_generado = []
     camino_generado.append(punto_partida)
@@ -302,7 +341,36 @@ def actualizar_matriz_feromonas(matriz_feromonas,caminos_hormigas,costes_caminos
         
                     
 
-def dibujar(fichero,camino):
+def dibujar(fichero,camino,optimo=False):
+    datos = lectura_archivo(fichero)
+
+    eje_x = []
+    eje_y = []
+    if not optimo:
+        for k in camino:
+            eje_x.append(datos[k][0])
+            eje_y.append(datos[k][1])
+
+        plt.plot(np.array(eje_x),np.array(eje_y))
+        plt.xlabel("Coord. X")
+        plt.ylabel("Coord. Y")
+        plt.title(fichero)
+        plt.show()
+    else:
+        for k in range(len(camino)):
+            camino[k] -= 1
+        
+        for k in camino:
+            eje_x.append(datos[k][0])
+            eje_y.append(datos[k][1])
+        plt.plot(np.array(eje_x),np.array(eje_y))
+        plt.xlabel("Coord. X")
+        plt.ylabel("Coord. Y")
+        plt.title(fichero)
+        plt.show()
+
+
+def dibujar_compuesto(fichero,camino,camino_optimo):
     datos = lectura_archivo(fichero)
 
     eje_x = []
@@ -310,11 +378,26 @@ def dibujar(fichero,camino):
     for k in camino:
         eje_x.append(datos[k][0])
         eje_y.append(datos[k][1])
+        
+    for k in range(len(camino_optimo)):
+        camino_optimo[k] -= 1
+        
+    eje_x_optimo = []
+    eje_y_optimo = []
+    for k in camino_optimo:
+        eje_x_optimo.append(datos[k][0])
+        eje_y_optimo.append(datos[k][1])
 
-    plt.plot(np.array(eje_x),np.array(eje_y))
+    plt.plot(np.array(eje_x),np.array(eje_y),'r',label="camino")
+    plt.plot(np.array(eje_x_optimo),np.array(eje_y_optimo),'b',label="camino_optimo")
+    
+    plt.legend(loc="upper left")
+    
     plt.show()
 
-def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 100_000,minutos_limite=1,valor_inicial_feronomas=1,punto_partida = 0,elite = 0,verbose = False):
+def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 100_000,minutos_limite=1,punto_partida = 0,elite = 0,verbose = False):
+    
+    valor_inicial_feronomas = greedy_calculo_camino_optimo(problema)
     
     datos = lectura_archivo(problema)
     matriz_heuristica = calculo_matriz_heuristica(datos)
@@ -331,12 +414,12 @@ def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 100_000,
     inicio = time.time()
   
     iteraccion = 0
-    
+    iteracion_mejora_ultima = 0
     while iteraccion < limite_iteracciones and (time.time() - inicio) < 60*minutos_limite:
         
-        # if verbose:
-        #     eje_x.append(iteraccion)
-        #     eje_y.append(coste_mejor_camino_global)
+        if verbose:
+            eje_x.append(iteraccion)
+            eje_y.append(coste_mejor_camino_global)
         
         costes_caminos_hormigas = []
         caminos_hormigas = []
@@ -351,8 +434,9 @@ def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 100_000,
             if coste_camino < coste_mejor_camino_global:
                 mejor_camino_global = camino_actual
                 coste_mejor_camino_global = coste_camino
+                iteracion_mejora_ultima = iteraccion
             
-            print(" tiempo ",time.time() - inicio , " iteracion " , iteraccion)
+            # print(" tiempo ",time.time() - inicio , " iteracion " , iteraccion)
         
         # Aplicamos la evaporación y el aporte 
         
@@ -364,10 +448,14 @@ def hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 100_000,
         dibujar(problema,mejor_camino_global)
         plt.plot(np.array(eje_x),np.array(eje_y))
         plt.show()
+    
+    print("ite" , iteracion_mejora_ultima)
     return mejor_camino_global , coste_mejor_camino_global
 
-def sistema_colonia_hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 100_000,minutos_limite=1,valor_inicial_feronomas=1,punto_partida = 0,verbose = False):
+def sistema_colonia_hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracciones = 100_000,minutos_limite=1,punto_partida = 0,verbose = False):
     
+    valor_inicial_feronomas = greedy_calculo_camino_optimo(problema)
+        
     datos = lectura_archivo(problema)
     matriz_heuristica = calculo_matriz_heuristica(datos)
     matriz_feromonas = np.ones((len(matriz_heuristica),len(matriz_heuristica))) * valor_inicial_feronomas
@@ -383,7 +471,8 @@ def sistema_colonia_hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracc
     inicio = time.time()
   
     iteraccion = 0
-    
+    iteracion_mejora_ultima = 0
+
     
     while iteraccion < limite_iteracciones and (time.time() - inicio) < 60*minutos_limite:
         
@@ -395,7 +484,6 @@ def sistema_colonia_hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracc
         caminos_hormigas = []
         for hormiga in range(n_hormigas):
             # Cada hormiga crea su recorrido
-            
             coste_camino,camino_actual = creacion_de_camino(matriz_feromonas,matriz_heuristica,punto_partida,valor_inicial_feronomas,sistema=True)
             caminos_hormigas.append(camino_actual)
             costes_caminos_hormigas.append(coste_camino)
@@ -405,9 +493,10 @@ def sistema_colonia_hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracc
             if coste_camino < coste_mejor_camino_global:
                 mejor_camino_global = camino_actual.copy()
                 coste_mejor_camino_global = coste_camino
+                iteracion_mejora_ultima = iteraccion
             
             
-        print(" tiempo ",time.time() - inicio , " iteracion " , iteraccion)
+        # print(" tiempo ",time.time() - inicio , " iteracion " , iteraccion)
         # Aplicamos la evaporación y el aporte 
         matriz_feromonas = evaporacion_global(matriz_feromonas,mejor_camino_global,coste_mejor_camino_global)
         
@@ -417,54 +506,35 @@ def sistema_colonia_hormigas(problema = "ch130.tsp",n_hormigas=10,limite_iteracc
         dibujar(problema,mejor_camino_global)
         plt.plot(np.array(eje_x),np.array(eje_y))
         plt.show()
+    print("ite" , iteracion_mejora_ultima)
     return mejor_camino_global , coste_mejor_camino_global
 
 
 
 
 
+f =  "a280.tsp"  
+# f = "ch130.tsp"
 
+# semilla = random.randint(0,4294967296)
 
+# random.seed(semilla)
+# np.random.seed(semilla)
 
-semilla = 503546630
-semilla = random.randint(41689191,999999999)
+# mejor_camino_global,coste_mejor_camino_global_elite = hormigas(problema=f,minutos_limite=5,elite=0,verbose=True)
+# mejor_camino_global,coste_mejor_camino_global_elite = hormigas(problema=f,minutos_limite=5,elite=15,verbose=True)
+# # mejor_camino_global,coste_mejor_camino_global_elite = sistema_colonia_hormigas(problema=f,minutos_limite=5,verbose=True)
 
-random.seed(semilla)
-np.random.seed(semilla)
+# print("hormiga " ,coste_mejor_camino_global_elite)  
+# print("semilla ", semilla)
 
-
-# valor = 1/(130*7579)
-# valor = 1/(280*6958)
-# f =  "a280.tsp"  
-
-
-valor = 1/(130*7579)
-f = "ch130.tsp"
-
-
-# mejor_camino_global,coste_mejor_camino_global_elite = hormigas(problema=f,valor_inicial_feronomas = valor,minutos_limite=6,elite=15,verbose=False)
-
-mejor_camino_global,coste_mejor_camino_global_elite = sistema_colonia_hormigas(problema=f,valor_inicial_feronomas = valor,minutos_limite=6,verbose=True)
-
-print("hormiga " ,coste_mejor_camino_global_elite)  
-
-print("semilla utilizada ", semilla)
-
+# print(mejor_camino_global)
 # dibujar(f,mejor_camino_global)
 
 
+# optimo_130 = [1,41,39,117,112,115,28,62,105,128,16,45,5,11,76,109,61,129,124,64,69,86,88,26,7,97,70,107,127,104,43,34,17,31,27,19,100,15,29,24,116,95,79,87,12,81,103,77,94,89,110,98,68,63,48,25,113,32,36,84,119,111,123,101,82,57,9,56,65,52,75,74,99,73,92,38,106,53,120,58,49,72,91,6,102,10,14,67,13,96,122,55,60,51,42,44,93,37,22,47,40,23,33,21,126,121,78,66,85,125,90,59,30,83,3,114,108,8,18,46,80,118,20,4,35,54,2,50,130,71]
+# optimo_280 = [1,2,242,243,244,241,240,239,238,237,236,235,234,233,232,231,246,245,247,250,251,230,229,228,227,226,225,224,223,222,221,220,219,218,217,216,215,214,213,212,211,210,207,206,205,204,203,202,201,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,176,180,179,150,178,177,151,152,156,153,155,154,129,130,131,20,21,128,127,126,125,124,123,122,121,120,119,157,158,159,160,175,161,162,163,164,165,166,167,168,169,170,172,171,173,174,107,106,105,104,103,102,101,100,99,98,97,96,95,94,93,92,91,90,89,109,108,110,111,112,88,87,113,114,115,117,116,86,85,84,83,82,81,80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65,64,58,57,56,55,54,53,52,51,50,49,48,47,46,45,44,59,63,62,118,61,60,43,42,41,40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,22,25,23,24,14,15,13,12,11,10,9,8,7,6,5,4,277,276,275,274,273,272,271,16,17,18,19,132,133,134,270,269,135,136,268,267,137,138,139,149,148,147,146,145,199,200,144,143,142,141,140,266,265,264,263,262,261,260,259,258,257,254,253,208,209,252,255,256,249,248,278,279,3,280]
 
-
-# datos = lectura_archivo(f)
-# distancias = calculo_matriz_distancias(datos)
-
-# p = mejor_camino_global
-# coste = 0
-# for i in range(len(p)-1):
-#     a = p[i]
-#     b = p[i+1]
-#     coste += distancias[a][b]
-# print(coste)
 
 
 

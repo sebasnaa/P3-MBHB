@@ -74,3 +74,126 @@ semilla utilizada  152546667
 colonia
 hormiga  6272.0
 semilla utilizada  467389604
+hormiga  6287.0
+semilla utilizada  443351620
+hormiga  6408.0
+semilla utilizada  67667509
+hormiga  6284.0
+semilla utilizada  258494464
+hormiga  6281.0
+semilla utilizada  602993434
+hormiga  6398.0
+semilla utilizada  2593599339
+ hormiga  6319.0
+semilla utilizada  1645417085
+
+
+colonia
+hormiga  2870.0
+semilla utilizada  2256446058
+hormiga  2790.0
+semilla utilizada  946737669
+hormiga  2794.0
+semilla utilizada  2999571863
+hormiga  2843.0
+semilla utilizada  167141552
+hormiga  2819.0
+semilla utilizada  3373351616
+hormiga  2839.0
+semilla utilizada  1018157851
+
+
+----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+                        Final
+----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+"ch130.tsp"
+ite 569
+hormiga  6715.0
+semilla  635891719
+--
+ite 1017
+hormiga  6620.0
+semilla  1243351695
+--
+ite 1068
+hormiga  6660.0
+semilla  2746439063
+--
+ite 989
+hormiga  6674.0
+semilla  3975746362
+--
+ite 1028
+hormiga  6570.0
+semilla  2940841592
+
+-----------------------------------
+
+"a280.tsp"
+ite 201
+hormiga  3247.0
+semilla  2256446058
+--
+te 105
+hormiga  3392.0
+semilla  1724307423
+--
+ite 120
+hormiga  3307.0
+semilla  950167662
+--
+ite 185
+hormiga  3361.0
+semilla  1188884199
+--
+ite 285
+hormiga  3387.0
+semilla  3159173679
+
+-----------------------------------
+ELITE
+"ch130.tsp"
+
+ite 264
+hormiga  6503.0
+semilla  674405011
+--
+ite 249
+hormiga  6532.0
+semilla  3784033442
+--
+ite 202
+hormiga  6617.0
+semilla  523220198
+--
+ite 207
+hormiga  6512.0
+semilla  3005135814
+ite 218
+hormiga  6455.0
+semilla  1025786628
+----------------------------------
+ELITE
+"a280.tsp"
+
+ite 299
+hormiga  2963.0
+semilla  2448998616
+--
+ite 267
+hormiga  2876.0
+semilla  3205733384
+--
+ite 300
+hormiga  2845.0
+semilla  815448346
+--
+ite 266
+hormiga  2964.0
+semilla  203708166
+--
+ite 279
+hormiga  3027.0
+semilla  3554215763
